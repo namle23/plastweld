@@ -8,7 +8,13 @@
     </head>
     <body>
         <div id="Stats"></div>
-        <div id="WebGL"></div>
+        <div id="WebGL">
+            <div id="changebg">
+                <h4>Custom background image</h4>
+                <input id="test" type="file" onchange="loadImageFile(this)" />
+                <button type="button" onclick="removeImageFile()">Default background</button>
+            </div>
+        </div>
     </body>
 </html>
 <script type="text/javascript" src="js/main.js"></script>
