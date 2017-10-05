@@ -131,8 +131,6 @@ function init() {
     }
     // append renderer output to HTML
     document.getElementById("WebGL").appendChild(webGLRenderer.domElement);
-    //add event mouse click to select object
-    document.addEventListener('mousedown', onDocumentMouseDown, false);
     //add two scenes together
     var bgPass = new THREE.RenderPass(sceneBG, cameraBG);
     var renderPass = new THREE.RenderPass(sceneKylpy, camera);
@@ -147,85 +145,8 @@ function init() {
     composer.addPass(renderPass);
     composer.addPass(effectCopy);
 
-    //create material for inner
-    var blackMaterial = new THREE.MeshPhongMaterial({
-        color: 0x323232
-    });
-    var grayMaterial = new THREE.MeshPhongMaterial({
-        color: 0xcccccc
-    });
-    var blueMaterial = new THREE.MeshPhongMaterial({
-        color: 0x008B8B
-    });
-    //function select object
-    function onDocumentMouseDown(event) {
-
-        var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
-        vector = vector.unproject(camera);
-        var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
-        var intersects = raycaster.intersectObjects([innerblue]);
-        if (intersects.length > 0) {
-
-            //create popup
-            function popUp() {
-                var popup = document.createElement("div");
-                popup.className = "popup";
-                popup.id = "test";
-                var cancel = document.createElement("div");
-                cancel.className = "cancel";
-                cancel.innerHTML = "X";
-                cancel.onclick = function (event) {
-                    popup.parentNode.removeChild(popup)
-                };
-                var innerBlue = document.createElement("input");
-                innerBlue.type = "button";
-                innerBlue.id = "innerBlueCSS";
-                innerBlue.onclick = function () {
-                    inner.traverse(function (child) {
-                        if (child instanceof THREE.Mesh) {
-                            child.material = blueMaterial;
-                        }
-                    });
-                }
-
-                var innerBlack = document.createElement("input");
-                innerBlack.type = "button";
-                innerBlack.id = "innerBlackCSS";
-                innerBlack.onclick = function () {
-                    inner.traverse(function (child) {
-                        if (child instanceof THREE.Mesh) {
-                            child.material = blackMaterial;
-                        }
-                    });
-                }
-
-                var innerGray = document.createElement("input");
-                innerGray.type = "button";
-                innerGray.id = "innerGrayCSS";
-                innerGray.onclick = function () {
-                    inner.traverse(function (child) {
-                        if (child instanceof THREE.Mesh) {
-                            child.material = grayMaterial;
-                        }
-                    });
-                }
-
-                popup.appendChild(innerBlue);
-                popup.appendChild(innerBlack);
-                popup.appendChild(innerGray);
-                popup.appendChild(cancel);
-                document.body.appendChild(popup);
-            }
-            $(popUp);
-        }
-    }
-
     //add controls
     var panel = new function () {
-        this.message = "Click inner toggle color";
-        this.rotate = false;
-        this.capColor = "blue";
-        this.custom = "Coming soon...";
 
         this.addCap = function () {
             sceneKylpy.add(capblack);
@@ -234,59 +155,15 @@ function init() {
         this.removeCap = function () {
             sceneKylpy.remove(capblack);
         };
-
-        this.savePosition = function () {
-            var setPositionObject = {
-                camPosition: camera.position.clone(),
-                camPan: orbitControls.target.clone()
-            }
-            var setPositionJson = JSON.stringify(setPositionObject);
-            localStorage.setItem("positionJson", setPositionJson);
-            console.log(setPositionJson);
-            alert("Position saved!");
-        };
-
-        this.restorePosition = function () {
-            var getPositionJson = localStorage.getItem("positionJson");
-            var getPositionObject = JSON.parse(getPositionJson);
-
-            //restore camera position and orbitControls target
-            camera.position.set(getPositionObject.camPosition.x, getPositionObject.camPosition.y, getPositionObject.camPosition.z);
-            orbitControls.target.set(getPositionObject.camPan.x, getPositionObject.camPan.y, getPositionObject.camPan.z);
-
-            console.log(getPositionObject);
-        };
     };
     var gui = new dat.GUI();
-    gui.add(panel, "message");
-    gui.add(panel, "rotate");
     gui.add(panel, "addCap");
     gui.add(panel, "removeCap");
-    gui.add(panel, "savePosition");
-    gui.add(panel, "restorePosition");
-    //add folder
-    var customizeFolder = gui.addFolder("Customize");
-    customizeFolder.add(panel, "custom");
 
     render();
     function render() {
         webGLRenderer.autoClear = false;
         orbitControls.update(delta);
-        if (panel.rotate) {
-            if (power) {
-                try {
-                    power.rotation.y += 0.001;
-                    capblack.rotation.y += 0.001;
-                    outter.rotation.y += 0.001;
-                    pipe.rotation.y += 0.001;
-                    humist.rotation.y += 0.001;
-                    innerblue.rotation.y += 0.001;
-                    bottom.rotation.y += 0.001;
-                } catch (e) {
-                    console.log("Rotation error");
-                }
-            }
-        }
         // render using requestAnimationFrame
         requestAnimationFrame(render);
         composer.render(delta);
@@ -320,18 +197,5 @@ function removeImageFile() {
 }
 
 window.onload = init;
-
-//save camera position when user leave page
-//window.onbeforeunload = function () {
-//    var setPositionObject = {
-//        camX: camera.position.x,
-//        camY: camera.position.y,
-//        camZ: camera.position.z,
-//        camPan: orbitControls.target.clone()
-//    }
-//    var setPositionJson = JSON.stringify(setPositionObject);
-//    localStorage.setItem("positionJson", setPositionJson);
-//    console.log(setPositionJson);
-//};
 
 window.addEventListener('resize', onResize, false);
