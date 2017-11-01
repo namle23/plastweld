@@ -1,13 +1,31 @@
-var sceneKylpy, sceneBG, camera, cameraBG, webGLRenderer;
+var sceneKylpy, sceneBG, camera, cameraBG, webGLRenderer, orbitControls;
 var filter = /^(?:image\/bmp|image\/cis\-cod|image\/gif|image\/ief|image\/jpeg|image\/jpeg|image\/jpeg|image\/pipeg|image\/png|image\/svg\+xml|image\/tiff|image\/x\-cmu\-raster|image\/x\-cmx|image\/x\-icon|image\/x\-portable\-anymap|image\/x\-portable\-bitmap|image\/x\-portable\-graymap|image\/x\-portable\-pixmap|image\/x\-rgb|image\/x\-xbitmap|image\/x\-xpixmap|image\/x\-xwindowdump)$/i;
 var fileReader = new FileReader();
 var innerblue;
+
+////create material for inner
+//var blackMaterial = new THREE.MeshPhongMaterial({
+//    color: 0x323232
+//});
+//var grayMaterial = new THREE.MeshPhongMaterial({
+//    color: 0xcccccc
+//});
+//var blueMaterial = new THREE.MeshPhongMaterial({
+//    color: 0x008B8B
+//});
+
+var mouse = {
+    x: 0,
+    y: 0
+}, INTERSECTED;
+
 function init() {
 
     sceneKylpy = new THREE.Scene();
     sceneBG = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     cameraBG = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, -10000, 10000);
+
     // create render
     webGLRenderer = new THREE.WebGLRenderer();
     webGLRenderer.setClearColor(new THREE.Color(0x000, 1.0));
@@ -71,7 +89,7 @@ function init() {
     camera.position.y = 80;
     camera.position.z = 40;
 
-    var orbitControls = new THREE.OrbitControls(camera);
+    orbitControls = new THREE.OrbitControls(camera);
 
     //for rotation
     var clock = new THREE.Clock();
@@ -145,6 +163,8 @@ function init() {
     composer.addPass(renderPass);
     composer.addPass(effectCopy);
 
+
+
     //add controls
     var panel = new function () {
 
@@ -161,6 +181,75 @@ function init() {
     gui.add(panel, "removeCap");
 
     render();
+
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+    //Set time delay 2 seconds for mousedown event
+    document.addEventListener('mousedown', function (event) {
+
+        setTimeout(function () {
+            var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+            vector = vector.unproject(camera);
+            var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+            var intersects = raycaster.intersectObjects([innerblue]);
+            if (intersects.length > 0) {
+
+                //create popup
+                function popUp() {
+                    var popup = document.createElement("div");
+                    popup.className = "popup";
+                    popup.id = "test";
+                    var cancel = document.createElement("div");
+                    cancel.className = "cancel";
+                    cancel.innerHTML = "X";
+                    cancel.onclick = function (event) {
+                        popup.parentNode.removeChild(popup)
+                    };
+                    var innerBlue = document.createElement("input");
+                    innerBlue.type = "button";
+                    innerBlue.id = "innerBlueCSS";
+                    innerBlue.onclick = function () {
+                        inner.traverse(function (child) {
+                            if (child instanceof THREE.Mesh) {
+                                child.material = blueMaterial;
+                            }
+                        });
+                    }
+
+                    var innerBlack = document.createElement("input");
+                    innerBlack.type = "button";
+                    innerBlack.id = "innerBlackCSS";
+                    innerBlack.onclick = function () {
+                        inner.traverse(function (child) {
+                            if (child instanceof THREE.Mesh) {
+                                child.material = blackMaterial;
+                            }
+                        });
+                    }
+
+                    var innerGray = document.createElement("input");
+                    innerGray.type = "button";
+                    innerGray.id = "innerGrayCSS";
+                    innerGray.onclick = function () {
+                        inner.traverse(function (child) {
+                            if (child instanceof THREE.Mesh) {
+                                child.material = grayMaterial;
+                            }
+                        });
+                    }
+
+                    popup.appendChild(innerBlue);
+                    popup.appendChild(innerBlack);
+                    popup.appendChild(innerGray);
+                    popup.appendChild(cancel);
+                    document.body.appendChild(popup);
+                }
+                $(popUp);
+            }
+        }, 2000);
+
+    }, false);
+
     function render() {
         webGLRenderer.autoClear = false;
         orbitControls.update(delta);
@@ -196,6 +285,38 @@ function removeImageFile() {
     location.reload();
 }
 
-window.onload = init;
+function onDocumentMouseMove(event) {
+    var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 1);
+    vector.unproject(camera);
+    var ray = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
 
+    var intersects = ray.intersectObjects(sceneKylpy.children); //hold all intersect object
+
+    if (intersects.length > 0) {
+        // if the closest object intersected is not the currently stored intersection object
+        if (intersects[0].object != INTERSECTED) {
+            // restore previous intersection object (if it exists) to its original color
+            if (INTERSECTED) {
+                INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+            }
+            // store reference to closest object as current intersection object
+            INTERSECTED = intersects[0].object;
+            // store color of closest object
+            INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+            // set a new color for closest object
+            INTERSECTED.material.color.setHex(0xe5ffe5);
+        }
+    } else {
+        if (INTERSECTED) {
+            INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+        }
+
+        INTERSECTED = null;
+    }
+
+    orbitControls.update();
+}
+
+window.onload = init;
 window.addEventListener('resize', onResize, false);
+

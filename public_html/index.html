@@ -5,14 +5,16 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="css/main.css">
+        <link rel="shortcut icon" href="#" />
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     </head>
     <body>
         <div id="Stats"></div>
         <div id="WebGL">
             <div id="changebg">
                 <h4>Custom background image</h4>
-                <input id="test" type="file" onchange="loadImageFile(this)" />
-                <button type="button" onclick="removeImageFile()">Default background</button>
+                <span class="btn btn-success btn-file"><input id="test" type="file" onchange="loadImageFile(this)" />Browse..</span>
+                <button type="button" class="btn btn-success" onclick="removeImageFile()">Default background</button>
             </div>
         </div>
     </body>
@@ -28,4 +30,5 @@
 <script type="text/javascript" src="js/postprocessing/MaskPass.js"></script>
 <script type="text/javascript" src="js/postprocessing/RenderPass.js"></script>
 <script type="text/javascript" src="js/postprocessing/TexturePass.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+
